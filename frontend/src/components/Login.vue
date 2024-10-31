@@ -1,8 +1,8 @@
 <template>
   <div class="container">
-    <div class="card">
-      <h2 class="title">Вход в систему</h2>
-      <form @submit.prevent="handleLogin">
+    <div class="card"> 
+      <h2 class="title">{{ isReset ? 'Восстановление пароля' : 'Вход в систему' }}</h2>
+      <form @submit.prevent="isReset ? handleReset : handleLogin" class="space-y-4">
         <label class="label" for="email">Электронная почта</label>
         <input
           v-model="email"
@@ -12,52 +12,79 @@
           class="input"
           placeholder="you@example.com"
         />
-
-        <label class="label" for="password">Пароль</label>
-        <input
-          v-model="password"
-          type="password"
-          id="password"
-          required
-          class="input"
-          placeholder="••••••••"
-        />
-
-        <button type="submit" class="button">
-          Войти
+        <div v-if="!isReset">
+          <label class="label" for="password">Пароль</label>
+          <input
+            v-model="password"
+            type="password"
+            id="password"
+            required
+            class="input"
+            placeholder="••••••••"
+          />
+        </div>
+        <div v-else class="invisible">
+          <label class="label" for="password">Пароль</label>
+          <input
+            type="password"
+            id="password"
+            class="input"
+            placeholder=""
+            disabled
+          />
+        </div>
+        <button type="submit" class="button" @click="isReset ? handleReset() : handleLogin()">
+          {{ isReset ? 'Отправить ссылку для восстановления' : 'Войти' }}
         </button>
       </form>
       <div class="footer">
-        <router-link to="/reset-password" class="link">
-          Забыли пароль?
-        </router-link>
+        <a @click.prevent="toggleForm" class="link">
+          {{ isReset ? 'Вернуться к входу' : 'Забыли пароль?' }}
+        </a>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-// import { ref } from 'vue';
-// import { useRouter } from 'vue-router';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 
-// const email = ref('');
-// const password = ref('');
-// const router = useRouter();
+const defaultEmail = 'user@example.com';
+const defaultPassword = 'password123';
 
-// const handleLogin = () => {
-//   console.log('Email:', email.value);
-//   console.log('Password:', password.value);
-//   router.push('/posts');
-// };
+const email = ref(defaultEmail);
+const password = ref(defaultPassword);
+const isReset = ref(false);
+
+const router = useRouter();
+
+const handleLogin = () => {
+  if (email.value === defaultEmail && password.value === defaultPassword) {
+    router.push('/posts');
+  } else {
+    alert('Неверный логин или пароль');
+  }
+};
+
+const handleReset = () => {
+  console.log('Reset Password for:', email.value);
+};
+
+const toggleForm = () => {
+  isReset.value = !isReset.value;
+  email.value = '';
+  password.value = '';
+};
 </script>
 
 <style scoped>
 .container {
-  @apply flex min-h-screen items-center justify-center p-4 transition-all duration-300;
+  @apply flex min-h-screen items-center justify-center p-4;
 }
 
 .card {
-  @apply bg-white p-12 rounded-3xl shadow-lg w-full max-w-lg transform transition-transform hover:scale-105;
+  @apply bg-white p-12 rounded-3xl shadow-lg w-96;
 }
 
 .title {
@@ -69,11 +96,11 @@
 }
 
 .input {
-  @apply w-full px-4 py-3 mb-6 border border-muted rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-darkBlue hover:border-primary;
+  @apply w-full px-4 py-3 mb-6 border border-muted rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-darkBlue;
 }
 
 .button {
-  @apply w-full bg-primary text-white py-3 px-4 rounded-lg transition-all duration-300 transform hover:bg-darkBlue hover:scale-105 active:scale-95;
+  @apply w-full bg-primary text-white py-3 px-4 rounded-lg;
 }
 
 .footer {
@@ -81,6 +108,10 @@
 }
 
 .link {
-  @apply text-muted hover:text-darkBlue transition-colors duration-200;
+  @apply text-muted cursor-pointer;
+}
+
+.invisible {
+  visibility: hidden;
 }
 </style>

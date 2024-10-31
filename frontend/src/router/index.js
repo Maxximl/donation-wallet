@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Login from '../components/Login.vue';
-import ResetPassword from '../components/ResetPassword.vue';
 import PostsList from '../components/PostsList.vue';
+import OrganizationDetail from '../components/OrganizationDetail.vue'
 
 const routes = [
   {
@@ -10,15 +10,16 @@ const routes = [
     component: Login,
   },
   {
-    path: '/reset-password',
-    name: 'ResetPassword',
-    component: ResetPassword,
-  },
-  {
     path: '/posts',
     name: 'PostsList',
     component: PostsList,
   },
+  {
+    path: '/organization/:id',
+    name: 'OrganizationDetail',
+    component: OrganizationDetail,
+    props: true 
+  }
 ];
 
 const router = createRouter({
