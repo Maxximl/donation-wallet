@@ -1,4 +1,4 @@
-from sqlalchemy import Column
+from sqlalchemy import Column, Integer, ForeignKey
 from sqlalchemy.dialects.postgresql import TEXT
 
 from .base import BaseTable
@@ -29,3 +29,4 @@ class User(BaseTable):
         doc="Email for notifications.",
         unique=True,
     )
+    account_id = Column(Integer, ForeignKey('accounts.id'), nullable=False)
