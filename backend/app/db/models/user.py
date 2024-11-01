@@ -29,4 +29,4 @@ class User(BaseTable):
         doc="Email for notifications.",
         unique=True,
     )
-    account_id = Column(Integer, ForeignKey('accounts.id'), nullable=False)
+    account_id = Column(Integer, ForeignKey('accounts.id'), nullable=True)

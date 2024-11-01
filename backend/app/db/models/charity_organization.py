@@ -18,5 +18,5 @@ class CharityOrganization(BaseTable):
     phone_number = Column(String)
     address = Column(String)
 
-    account_id = Column(Integer, ForeignKey('accounts.id'), nullable=False)
+    account_id = Column(Integer, ForeignKey('accounts.id'), nullable=True)
     account = relationship("Account")

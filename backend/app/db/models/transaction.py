@@ -22,8 +22,8 @@ class Transaction(BaseTable):
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
     transaction_type = Column(String, nullable=False)
 
-    sender_account = relationship("Account")
-    receiver_account = relationship("Account")
+    sender_account = relationship("Account", foreign_keys=[sender_account_id])
+    receiver_account = relationship("Account", foreign_keys=[receiver_account_id])
 
     # sender_account = relationship("Account", foreign_keys=[sender_account_id], back_populates="sent_transactions")
     # receiver_account = relationship("Account", foreign_keys=[receiver_account_id], back_populates="received_transactions")
