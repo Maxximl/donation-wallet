@@ -7,6 +7,8 @@ from .base import BaseTable
 class User(BaseTable):
     __tablename__ = "users"
 
+    id = Column(Integer, primary_key=True)
+
     username = Column(
         "username",
         TEXT,
@@ -29,4 +31,3 @@ class User(BaseTable):
         doc="Email for notifications.",
         unique=True,
     )
-    account_id = Column(Integer, ForeignKey('accounts.id'), nullable=True)

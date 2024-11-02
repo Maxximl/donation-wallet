@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, Body
+from fastapi import APIRouter, Depends, HTTPException, Request, Body, Path, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from app.schemas import Transaction
 from app.db.connection import get_session
-from app.services.mock_data import mock_transactions
+from app.services.mock_api_schemas import mock_transactions
 
 api_router = APIRouter(
     prefix="",
@@ -18,8 +18,9 @@ api_router = APIRouter(
     status_code=status.HTTP_200_OK,
 )
 async def get_all(
+        account_id: int = Query(...),
         session: AsyncSession = Depends(get_session)):
-    return mock_transactions
+    return mock_transactions.values()
 
 
 @api_router.post(
@@ -35,7 +36,7 @@ async def create(
 
 
 @api_router.get(
-    "/charity_organizations/{id}",
+    "/transactions/{id}",
     response_model=Transaction,
     status_code=status.HTTP_200_OK,
     responses={
@@ -47,8 +48,8 @@ async def create(
 async def get(
         id: int,
         session: AsyncSession = Depends(get_session)):
-    if id >= len(mock_transactions):
+    if id not in mock_transactions:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="not found")
-    return mock_transactions[id - 1]
+    return mock_transactions[id]

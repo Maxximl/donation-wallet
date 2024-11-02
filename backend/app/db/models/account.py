@@ -11,3 +11,4 @@ class Account(BaseTable):
     __tablename__ = 'accounts'
     id = Column(Integer, primary_key=True)
     balance = Column(Float, default=0.0)
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)

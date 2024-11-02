@@ -14,7 +14,7 @@ class TokenData(BaseModel):
 
 class RegistrationForm(BaseModel):
     username: constr(min_length=1)
-    password: constr(min_length=6)
+    password: constr(min_length=4)
     email: EmailStr | None
 
     @validator("password")

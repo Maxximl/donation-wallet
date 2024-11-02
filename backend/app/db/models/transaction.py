@@ -15,6 +15,7 @@ class TransactionType(Enum):
 class Transaction(BaseTable):
     __tablename__ = 'transactions'
 
+    id = Column(Integer, primary_key=True)
     sender_account_id = Column(Integer, ForeignKey('accounts.id'), nullable=False)
     receiver_account_id = Column(Integer, ForeignKey('accounts.id'), nullable=False)
     amount = Column(Float, nullable=False)

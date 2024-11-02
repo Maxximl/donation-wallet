@@ -4,7 +4,7 @@ from starlette import status
 
 from app.schemas import CharityOrganization
 from app.db.connection import get_session
-from app.services.mock_data import mock_charity_organizations
+from app.services.mock_api_schemas import mock_charity_organizations
 
 api_router = APIRouter(
     prefix="",
@@ -19,7 +19,7 @@ api_router = APIRouter(
 )
 async def get_all(
         session: AsyncSession = Depends(get_session)):
-    return mock_charity_organizations
+    return mock_charity_organizations.values()
 
 
 @api_router.post(
@@ -47,8 +47,8 @@ async def create(
 async def get(
         charity_organization_id: int,
         session: AsyncSession = Depends(get_session)):
-    if charity_organization_id >= len(mock_charity_organizations):
+    if charity_organization_id not in mock_charity_organizations:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="charity_organizations with this id and this owner not found")
-    return mock_charity_organizations[charity_organization_id - 1]
+    return mock_charity_organizations[charity_organization_id]
