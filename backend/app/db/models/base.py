@@ -8,13 +8,13 @@ from app.db import Base
 class BaseTable(Base):
     __abstract__ = True
 
-    id = Column(
-        UUID(as_uuid=True),
-        primary_key=True,
-        server_default=func.gen_random_uuid(),
-        unique=True,
-        doc="Unique index of element (type UUID)",
-    )
+    # id = Column(
+    #     UUID(as_uuid=True),
+    #     primary_key=True,
+    #     server_default=func.gen_random_uuid(),
+    #     unique=True,
+    #     doc="Unique index of element (type UUID)",
+    # )
 
     # dt_created = Column(
     #     TIMESTAMP(timezone=True),

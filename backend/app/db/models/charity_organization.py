@@ -19,4 +19,7 @@ class CharityOrganization(BaseTable):
     address = Column(String)
 
     account_id = Column(Integer, ForeignKey('accounts.id'), nullable=True)
+    owner_id = Column(Integer, ForeignKey('users.id'), nullable=True)
+
     account = relationship("Account")
+    owner = relationship("User")
