@@ -10,7 +10,7 @@
           </p>
         </div>
 
-        <h2 class="text-2xl font-semibold text-darkBlue mb-4 text-center">z
+        <h2 class="text-2xl font-semibold text-darkBlue mb-4 text-center">
           Транзакции:
         </h2>
         <div class="flex-1 mb-6 flex flex-col">
@@ -53,12 +53,12 @@
         <div
           class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0"
         >
-          <button @click="openModal" class="donate-button w-full sm:w-auto">
-            Отправить пожертвование
+        <button @click="goBack" class="back-button w-full sm:w-auto">
+            Назад
           </button>
 
-          <button @click="goBack" class="back-button w-full sm:w-auto">
-            Назад
+          <button @click="openModal" class="donate-button w-full sm:w-auto">
+            Отправить пожертвование
           </button>
         </div>
       </div>
