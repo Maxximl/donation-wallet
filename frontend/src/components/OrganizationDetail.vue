@@ -30,16 +30,16 @@
               </div>
               <div class="flex items-center mt-2 sm:mt-0">
                 <span
-                  :class="{
-                    'text-green-600': transaction.type === 'incoming',
-                    'text-red-600': transaction.type === 'outgoing',
-                  }"
-                  class="transaction-amount mr-4"
-                >
-                  {{ transaction.type === 'incoming' ? '+' : '-' }}{{
-                    formatCurrency(transaction.amount)
-                  }}
-                </span>
+  :class="{
+    'text-green-600': transaction.transaction_type === 'donation',
+    'text-red-600': transaction.transaction_type === 'deposit',
+  }"
+  class="transaction-amount mr-4"
+>
+  {{ transaction.transaction_type === 'donation' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
+</span>
+
+
                 <span class="text-sm text-gray-500">{{ transaction.comment }}</span>
               </div>
             </div>
@@ -92,6 +92,17 @@
                 placeholder="Введите сумму"
                 class="custom-amount-input"
               >
+            </div>
+            <div>
+              <label for="customAmount" class="block text-gray-700 mb-2">Введите комментарий к платежу:</label>
+            <textarea 
+                type="string" 
+                id="Comment" 
+                v-model.number="Comment" 
+                placeholder="Введите комментарий"
+                class="custom-comment-input"
+              >
+            </textarea>
             </div>
           </div>
           
@@ -214,24 +225,25 @@
   }
 
   const mergedTransactions = computed(() => {
-    const incoming = organization.value.incomingTransactions.map(tx => ({
-      ...tx,
-      type: 'incoming',
-      description: tx.description,
-    }))
-    
-    const outgoing = organization.value.outgoingTransactions.map(tx => ({
-      ...tx,
-      type: 'outgoing',
-      description: tx.description,
-    }))
-    
-    return [...incoming, ...outgoing].sort((a, b) => {
-      const dateA = new Date(a.timestamp)
-      const dateB = new Date(b.timestamp)
-      return dateB - dateA
-    })
+  const incoming = organization.value.incomingTransactions.map(tx => ({
+    ...tx,
+    type: 'donation', 
+    description: tx.description,
+  }))
+  
+  const outgoing = organization.value.outgoingTransactions.map(tx => ({
+    ...tx,
+    type: 'deposit', 
+    description: tx.description,
+  }))
+  
+  return [...incoming, ...outgoing].sort((a, b) => {
+    const dateA = new Date(a.timestamp)
+    const dateB = new Date(b.timestamp)
+    return dateB - dateA
   })
+})
+
 
   onMounted(async () => {
     const id = parseInt(route.params.id, 10)
@@ -314,6 +326,10 @@
   }
 
   .custom-amount-input {
+    @apply w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500;
+  }
+
+  .custom-comment-input{
     @apply w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500;
   }
 
