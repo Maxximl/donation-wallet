@@ -24,7 +24,7 @@ const organizations = ref([]);
 
 onMounted(async () => {
   try {
-    const response = await fetch('http://localhost:8000/api/charity_organizations');
+    const response = await fetch('http://80.249.151.87:8000/api/charity_organizations');
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
