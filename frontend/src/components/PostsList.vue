@@ -13,18 +13,32 @@
         Нет доступных организаций для поддержки.
       </div>
     </div>
+
+    <Menu :goBack="goBack" :openModal="openModal" />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, provide } from 'vue';
+import { useRouter } from 'vue-router';
 import Post from './Post.vue';
+import Menu from './Menu.vue';
 
 const organizations = ref([]);
 
+const router = useRouter();
+
+const goBack = () => {
+  router.back();
+};
+
+const openModal = () => {
+  console.log('Открыть модальное окно');
+};
+
 onMounted(async () => {
   try {
-    const response = await fetch('http://80.249.151.87:8000/api/charity_organizations');
+    const response = await fetch('http://0.0.0.0:8000/api/charity_organizations');
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
@@ -36,10 +50,11 @@ onMounted(async () => {
   }
 });
 
-// console.log(organizations.value)
-
 provide('organizations', organizations);
 </script>
 
 <style scoped>
+.text-darkBlue {
+  color: #1E3A8A;
+}
 </style>

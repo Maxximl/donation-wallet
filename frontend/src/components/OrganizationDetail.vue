@@ -85,7 +85,7 @@ const submitDonation = async (donationData) => {
   cachedTransactions.push(newTransaction)
   localStorage.setItem(transactionsKey, JSON.stringify(cachedTransactions))
 
-  const response = await fetch('http://80.249.151.87:8000/api/transactions', {
+  const response = await fetch('http://0.0.0.0:8000/api/transactions', {
     method: 'POST',
     headers: {
       'Accept': 'application/json',
@@ -151,7 +151,7 @@ const mergedTransactions = computed(() => {
 
 onMounted(async () => {
   const id = parseInt(route.params.id, 10)
-  const organizationResponse = await fetch(`http://80.249.151.87:8000/api/charity_organizations/${id}`, {
+  const organizationResponse = await fetch(`http://0.0.0.0:8000/api/charity_organizations/${id}`, {
     method: 'GET',
     headers: {
       'Accept': 'application/json',
@@ -190,7 +190,7 @@ onMounted(async () => {
     )
     // console.log('Транзакции загружены из кэша для организации ID:', organization.value.id)
   } else {
-    const transactionsResponse = await fetch(`http://80.249.151.87:8000/api/transactions?account_id=${orgData.account_id}`, {
+    const transactionsResponse = await fetch(`http://0.0.0.0:8000/api/transactions?account_id=${orgData.account_id}`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
