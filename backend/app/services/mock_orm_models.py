@@ -11,16 +11,10 @@ mock_users = {
     ),
     2: User(
         id=2,
-        username="jane_smith",
-        password="hashed_password_456",
-        email="jane.smith@example.com"
-    ),
-    3: User(
-        id=2,
         username="string",
         password="string",
-        email="string@example.com"
-    )
+        email="jane.smith@example.com"
+    ),
 }
 
 mock_accounts = {
@@ -31,12 +25,12 @@ mock_accounts = {
     ),
     2: Account(
         id=2,
-        balance=1000.50,
+        balance=5000.50,
         owner_id=1
     ),
     3: Account(
         id=3,
-        balance=250.75,
+        balance=2500.75,
         owner_id=2
     )
 }
@@ -61,13 +55,13 @@ mock_charity_organizations = {
         email="contact@greenearth.org",
         phone_number="987-654-3210",
         address="456 Eco Rd, Nature Town",
-        account_id=3,  # Предполагаем, что у аккаунта с id=2 есть эта организация
+        account_id=1,  # Предполагаем, что у аккаунта с id=2 есть эта организация
         owner_id=2  # Предполагаем, что у пользователя с id=2 есть эта организация
     )
 }
 
-mock_transactions = {
-    1: Transaction(
+mock_transactions = [
+    Transaction(
         id=1,
         sender_account_id=2,
         receiver_account_id=1,
@@ -76,13 +70,14 @@ mock_transactions = {
         timestamp=datetime.datetime(2023, 10, 1, 14, 30),
         transaction_type="donation"
     ),
-    2: Transaction(
+    Transaction(
         id=2,
-        sender_account_id=2,
+        sender_account_id=1,
         receiver_account_id=3,
         amount=50.00,
         description="Типа потратили",
         timestamp=datetime.datetime(2023, 11, 2, 10, 15),
         transaction_type="deposit"
-    )
-}
+    ),
+
+]

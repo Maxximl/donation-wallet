@@ -13,6 +13,6 @@ def model_list_to_schemas_list(schema, models_list: dict) -> dict:
 
 
 mock_accounts = model_list_to_schemas_list(Account, mock_orm_models.mock_accounts)
-mock_transactions = model_list_to_schemas_list(Transaction, mock_orm_models.mock_transactions)
+mock_transactions = list(map(Transaction.from_orm, mock_orm_models.mock_transactions))
 mock_charity_organizations = model_list_to_schemas_list(CharityOrganization, mock_orm_models.mock_charity_organizations)
 mock_users = model_list_to_schemas_list(User, mock_orm_models.mock_users)
