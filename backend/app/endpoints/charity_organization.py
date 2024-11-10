@@ -5,6 +5,8 @@ from starlette import status
 from app.schemas import CharityOrganization
 from app.db.connection import get_session
 from app.services.mock_api_schemas import mock_charity_organizations
+from app.db.models import User
+from app.services.user_manager import get_current_user
 
 api_router = APIRouter(
     prefix="",
@@ -28,7 +30,9 @@ async def get_all(
 )
 async def create(
         charity_organization: CharityOrganization = Body(...),
-        session: AsyncSession = Depends(get_session)):
+        session: AsyncSession = Depends(get_session),
+        current_user: User = Depends(get_current_user),
+):
     # По хорошему надо передать user_id или organization_id и брать только их счета
     print(charity_organization)
     return {"msg": "OK"}
