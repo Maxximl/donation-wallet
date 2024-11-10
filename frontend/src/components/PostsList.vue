@@ -30,10 +30,13 @@ onMounted(async () => {
     }
     const data = await response.json();
     organizations.value = data; 
+    // console.log('organization', organizations)
   } catch (error) {
     console.error('Ошибка при получении данных:', error);
   }
 });
+
+// console.log(organizations.value)
 
 provide('organizations', organizations);
 </script>
