@@ -4,7 +4,10 @@
       <h2 class="text-2xl sm:text-3xl md:text-4xl font-semibold text-darkBlue mb-6 sm:mb-8 md:mb-10 text-center">
         Благотворительные Организации
       </h2>
-      <div v-if="organizations.length" class="space-y-4 sm:space-y-6">
+      <div v-if="isLoading" class="text-center text-gray-500 text-sm sm:text-base">
+        Загрузка организаций<span class="dots">...</span>
+      </div>
+      <div v-else-if="organizations.length" class="space-y-4 sm:space-y-6">
         <Post 
           v-for="org in organizations" 
           :key="org.id" 
@@ -29,6 +32,7 @@ import Post from './Post.vue';
 import Menu from './Menu.vue';
 
 const organizations = ref([]);
+const isLoading = ref(true);
 
 const router = useRouter();
 
@@ -47,9 +51,11 @@ onMounted(async () => {
       throw new Error('Network response was not ok');
     }
     const data = await response.json();
-    organizations.value = data; 
+    organizations.value = data;
   } catch (error) {
     console.error('Ошибка при получении данных:', error);
+  } finally {
+    isLoading.value = false;
   }
 });
 
@@ -59,5 +65,26 @@ provide('organizations', organizations);
 <style scoped>
 .text-darkBlue {
   color: #1E3A8A;
+}
+
+.dots::after {
+  content: '';
+  display: inline-block;
+  animation: dots 1.5s steps(5, end) infinite;
+}
+
+@keyframes dots {
+  0%, 20% {
+    content: '';
+  }
+  40% {
+    content: '.';
+  }
+  60% {
+    content: '..';
+  }
+  80%, 100% {
+    content: '...';
+  }
 }
 </style>

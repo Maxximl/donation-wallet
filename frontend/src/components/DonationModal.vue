@@ -14,10 +14,6 @@
           </button>
         </div>
 
-        <div v-if="selectedAmount" class="mt-4 text-center">
-          Вы выбрали: <strong>{{ formatCurrency(selectedAmount) }}</strong>
-        </div>
-
         <div>
           <label for="customAmount" class="block text-gray-700 mb-2">Или введите свою сумму:</label>
           <input
@@ -26,7 +22,7 @@
             v-model.number="customAmount"
             min="1"
             placeholder="Введите сумму"
-            class="custom-amount-input"
+            class="custom-amount-input "
           >
         </div>
 
@@ -58,7 +54,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 
 defineProps({
   isModalOpen: {
@@ -82,10 +78,19 @@ const customAmount = ref(null)
 const comment = ref('')
 const errorMessage = ref('')
 
-const selectAmount = (amount) => {
+// Следим за изменениями selectedAmount и обновляем customAmount
+watch(selectedAmount, (newAmount) => {
+  customAmount.value = newAmount
+})
+
+const selectAmount = async (amount) => {
   selectedAmount.value = amount
-  customAmount.value = null
+  customAmount.value = amount
   errorMessage.value = ''
+
+  // Дождемся обновления и затем вызовем alert
+  await nextTick()
+  alert(`Вы выбрали: ${formatCurrency(amount)}`)
 }
 
 const handleSubmitDonation = () => {
@@ -100,6 +105,7 @@ const handleSubmitDonation = () => {
 };
 
 </script>
+
 
 <style scoped>
 .modal-overlay {

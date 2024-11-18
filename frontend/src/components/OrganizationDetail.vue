@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col h-screen p-4">
+  <div class="flex flex-col p-4">
     <div class="max-w-3xl mx-auto flex flex-col flex-1">
       <OrganizationHeader :organization="organization" />
 
@@ -19,12 +19,12 @@
 
       <Menu :goBack="goBack" :openModal="openModal" />
  
-      <div v-if="isLoading" class="text-center text-gray-500 mt-4">
+      <!-- <div v-if="isLoading" class="text-center text-gray-500 mt-4">
         Загрузка транзакций...
-      </div>
-      <div v-if="error" class="text-center text-red-500 mt-4">
+      </div> -->
+      <!-- <div v-if="error" class="text-center text-red-500 mt-4">
         {{ error }}
-      </div>
+      </div> -->
     </div>
 
     <DonationModal
@@ -37,7 +37,6 @@
     />
   </div>
 </template>
-
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
@@ -77,57 +76,50 @@ const closeModal = () => {
 }
 
 const submitDonation = async (donationData) => {
-  let { amount, comment } = donationData;
+  const { amount, comment } = donationData
 
   if (!amount || amount < 1) {
-    return;
+    return
   }
 
+  const organizationId = parseInt(route.params.id, 10)
+
   const newTransaction = {
-    sender_account_id: null, 
-    receiver_account_id: organization.value.account_id,
+    sender_account_id: 1,
+    receiver_account_id: organizationId,
     amount: amount,
-    description: comment || 'Пожертвование через интерфейс',
+    description: comment || 'Пожертвование без комментария',
     timestamp: new Date().toISOString(),
     transaction_type: 'donation',
-  };
-
-  const transactionsKey = `transactions_${organization.value.account_id}`;
+  }
 
   try {
-    const response = await fetch('/api/transactions', {
+    const response = await fetch(`/api/accounts/${organizationId}/transactions`, {
       method: 'POST',
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(newTransaction),
-    });
+    })
 
     if (!response.ok) {
-      console.error('Ошибка при отправке транзакции:', response.statusText);
-      return;
+      return
     }
 
-    const createdTransaction = await response.json();
-    newTransaction.id = createdTransaction.id;
-
-    const cachedTransactions = JSON.parse(localStorage.getItem(transactionsKey)) || [];
-    cachedTransactions.push(newTransaction);
-    localStorage.setItem(transactionsKey, JSON.stringify(cachedTransactions));
+    const createdTransaction = await response.json()
+    newTransaction.id = createdTransaction.id
 
     if (newTransaction.receiver_account_id === organization.value.account_id) {
-      organization.value.incomingTransactions.push(newTransaction);
+      organization.value.incomingTransactions.push(newTransaction)
     }
     if (newTransaction.sender_account_id === organization.value.account_id) {
-      organization.value.outgoingTransactions.push(newTransaction);
+      organization.value.outgoingTransactions.push(newTransaction)
     }
-  } catch (error) {
-    console.error('Ошибка при отправке транзакции:', error);
   } finally {
-    closeModal();
+    closeModal()
   }
-};
+}
 
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB' }).format(value)
@@ -149,47 +141,42 @@ const goBack = () => {
 }
 
 const mergedTransactions = computed(() => {
-  const incoming = organization.value.incomingTransactions.map(tx => ({
-    ...tx,
-    type: 'donation',
-    description: tx.description,
-  }))
+  const organizationId = parseInt(route.params.id, 10)
 
-  const outgoing = organization.value.outgoingTransactions.map(tx => ({
-    ...tx,
-    type: 'deposit',
-    description: tx.description,
-  }))
+  const uniqueTransactions = Array.from(new Set([
+    ...organization.value.incomingTransactions,
+    ...organization.value.outgoingTransactions,
+  ].map(tx => JSON.stringify(tx))))
+    .map(tx => JSON.parse(tx))
 
-  return [...incoming, ...outgoing].sort((a, b) => {
-    const dateA = new Date(a.timestamp)
-    const dateB = new Date(b.timestamp)
-    return dateB - dateA
-  })
+  return uniqueTransactions.filter(tx =>
+    tx.receiver_account_id === organizationId
+  ).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
 })
-
-const organizationReceiverMap = {
-  1: 3, 
-  2: 1, 
-}
 
 const fetchOrganizationData = async (id) => {
   isLoading.value = true
   error.value = null
 
   try {
-    const organizationResponse = await fetch(`/api/charity_organizations/${id}`, {
+    const organizationsResponse = await fetch('/api/charity_organizations', {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
       },
     })
 
-    if (!organizationResponse.ok) {
-      throw new Error('Ошибка при получении данных организации: ' + organizationResponse.statusText)
+    if (!organizationsResponse.ok) {
+      throw new Error('Ошибка при получении списка организаций')
     }
 
-    const orgData = await organizationResponse.json()
+    const organizationsData = await organizationsResponse.json()
+    const orgData = organizationsData.find(org => org.id === id)
+
+    if (!orgData) {
+      throw new Error('Организация с таким ID не найдена.')
+    }
+
     organization.value = {
       id: orgData.id,
       name: orgData.name,
@@ -203,45 +190,29 @@ const fetchOrganizationData = async (id) => {
       outgoingTransactions: [],
     }
 
-    const receiverAccountId = organizationReceiverMap[id]
+    const transactionsResponse = await fetch(`/api/accounts/${organization.value.account_id}/transactions`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    })
 
-    if (!receiverAccountId) {
-      throw new Error('Receiver Account ID не найден для организации с ID: ' + id)
+    if (!transactionsResponse.ok) {
+      throw new Error('Ошибка при получении транзакций')
     }
 
-    const transactionsKey = `transactions_${receiverAccountId}`
+    let transactionsData = await transactionsResponse.json()
 
-    const cachedTransactions = JSON.parse(localStorage.getItem(transactionsKey))
+    transactionsData = transactionsData.filter(
+      tx => tx.receiver_account_id === organization.value.account_id || tx.sender_account_id === organization.value.account_id
+    )
 
-    if (cachedTransactions && cachedTransactions.length > 0) {
-      organization.value.incomingTransactions = cachedTransactions.filter(
-        tx => tx.receiver_account_id === receiverAccountId
-      )
-      organization.value.outgoingTransactions = cachedTransactions.filter(
-        tx => tx.sender_account_id === organization.value.account_id
-      )
-    } else {
-      const transactionsResponse = await fetch(`/api/accounts/${receiverAccountId}/transactions`, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        },
-      })
-
-      if (!transactionsResponse.ok) {
-        throw new Error('Ошибка при получении транзакций: ' + transactionsResponse.statusText)
-      }
-
-      const transactionsData = await transactionsResponse.json()
-      organization.value.incomingTransactions = transactionsData.filter(
-        tx => tx.receiver_account_id === receiverAccountId
-      )
-      organization.value.outgoingTransactions = transactionsData.filter(
-        tx => tx.sender_account_id === organization.value.account_id
-      )
-
-      localStorage.setItem(transactionsKey, JSON.stringify(transactionsData))
-    }
+    organization.value.incomingTransactions = transactionsData.filter(
+      tx => tx.receiver_account_id === organization.value.account_id
+    )
+    organization.value.outgoingTransactions = transactionsData.filter(
+      tx => tx.sender_account_id === organization.value.account_id
+    )
   } catch (err) {
     error.value = err.message
   } finally {
@@ -263,6 +234,7 @@ watch(
   }
 )
 </script>
+
 
 <style scoped>
 .text-darkBlue {
