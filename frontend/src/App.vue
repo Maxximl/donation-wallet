@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div class="app-container">
     <router-view />
   </div>
 </template>
@@ -17,7 +17,7 @@ background: linear-gradient(172deg, rgba(2,0,36,1) 0%, rgba(41,41,221,1) 0%, rgb
   margin: 0; 
 }
 
-.container {
+.app-container {
   max-width: 480px; 
   margin: 0 auto; 
   padding: 16px;
