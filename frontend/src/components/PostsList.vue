@@ -26,7 +26,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, provide } from 'vue';
+import { ref, provide } from 'vue';
 import { useRouter } from 'vue-router';
 import Post from './Post.vue';
 import Menu from './Menu.vue';
@@ -44,20 +44,78 @@ const openModal = () => {
   console.log('Открыть модальное окно');
 };
 
-onMounted(async () => {
+const fetchOrganizations = async (timeout = 5000) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+  }, timeout);
+
   try {
-    const response = await fetch('/api/charity_organizations');
+    const response = await fetch('/api/charity_organizations', {
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
     if (!response.ok) {
-      throw new Error('Network response was not ok');
+      throw new Error('Сетевая ошибка: ' + response.statusText);
     }
+
     const data = await response.json();
-    organizations.value = data;
+
+    if (Array.isArray(data) && data.every(item => item.id && item.name)) {
+      organizations.value = data;
+      localStorage.setItem('organizations', JSON.stringify(data));
+      return true;
+    } else {
+      throw new Error('Полученные данные имеют неверный формат');
+    }
   } catch (error) {
-    console.error('Ошибка при получении данных:', error);
-  } finally {
-    isLoading.value = false;
+    if (error.name === 'AbortError') {
+      console.warn('Запрос был прерван из-за тайм-аута');
+    } else {
+      console.error('Ошибка при получении данных:', error);
+    }
+    return false;
   }
-});
+};
+
+const loadOrganizations = async () => {
+  isLoading.value = true;
+
+  const initialTimeout = 5000; 
+  const maxRetries = 5;        
+  const backoffFactor = 2;    
+
+  let timeout = initialTimeout;
+  let success = false;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    console.log(`Попытка ${attempt} с таймаутом ${timeout} мс`);
+    success = await fetchOrganizations(timeout);
+    if (success) {
+      console.log('Данные успешно получены');
+      break;
+    } else {
+      console.warn(`Попытка ${attempt} не удалась`);
+      timeout *= backoffFactor; 
+    }
+  }
+
+  if (!success) {
+    console.warn('Все попытки не увенчались успехом, пытаемся загрузить кешированные данные');
+    const cachedData = localStorage.getItem('organizations');
+    if (cachedData) {
+      organizations.value = JSON.parse(cachedData);
+    } else {
+      console.error('Кешированных данных нет');
+    }
+  }
+
+  isLoading.value = false;
+};
+
+loadOrganizations();
 
 provide('organizations', organizations);
 </script>
