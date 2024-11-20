@@ -18,7 +18,7 @@
       </button>
 
       <Menu :goBack="goBack" :openModal="openModal" />
- 
+
       <!-- <div v-if="isLoading" class="text-center text-gray-500 mt-4">
         Загрузка транзакций...
       </div> -->
@@ -38,18 +38,40 @@
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted, computed, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import OrganizationHeader from './OrganizationHeader.vue'
-import TransactionList from './TransactionList.vue'
-import Menu from './Menu.vue'
-import DonationModal from './DonationModal.vue'
+<script setup lang="ts">
+import { ref, onMounted, computed, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import OrganizationHeader from './OrganizationHeader.vue';
+import TransactionList from './TransactionList.vue';
+import Menu from './Menu.vue';
+import DonationModal from './DonationModal.vue';
 
-const route = useRoute()
-const router = useRouter()
+interface Transaction {
+  sender_account_id: number;
+  receiver_account_id: number;
+  amount: number;
+  description: string;
+  timestamp: string;
+  transaction_type: string;
+}
 
-const organization = ref({
+interface Organization {
+  id: number | null;
+  name: string;
+  description: string;
+  website: string;
+  email: string;
+  phone_number: string;
+  address: string;
+  account_id: number | null;
+  incomingTransactions: Transaction[];
+  outgoingTransactions: Transaction[];
+}
+
+const route = useRoute();
+const router = useRouter();
+
+const organization = ref<Organization>({
   id: null,
   name: '',
   description: '',
@@ -60,40 +82,48 @@ const organization = ref({
   account_id: null,
   incomingTransactions: [],
   outgoingTransactions: [],
-})
+});
 
-const isModalOpen = ref(false)
-const predefinedAmounts = [500, 1000, 2000, 5000]
-const isLoading = ref(true)
-const error = ref(null)
+const isModalOpen = ref(false);
+const predefinedAmounts = ref<number[]>([500, 1000, 2000, 5000]);
+const isLoading = ref(true);
+const error = ref<string | null>(null);
 
-const openModal = () => {
-  isModalOpen.value = true
-}
+const openModal = (): void => {
+  console.log('Открытие модального окна пожертвования');
+  isModalOpen.value = true;
+};
 
-const closeModal = () => {
-  isModalOpen.value = false
-}
+const closeModal = (): void => {
+  console.log('Закрытие модального окна пожертвования');
+  isModalOpen.value = false;
+};
 
-const submitDonation = async (donationData) => {
-  const { amount, comment } = donationData
+const submitDonation = async (donationData: { amount: number; comment: string }): Promise<void> => {
+  console.log('Начало отправки пожертвования:', donationData);
+  console.time('submitDonation');
+  
+  const { amount, comment } = donationData;
 
   if (!amount || amount < 1) {
-    return
+    console.warn('Некорректная сумма пожертвования:', amount);
+    console.timeEnd('submitDonation');
+    return;
   }
 
-  const organizationId = parseInt(route.params.id, 10)
+  const organizationId = parseInt(route.params.id as string, 10);
 
-  const newTransaction = {
+  const newTransaction: Transaction = {
     sender_account_id: 1,
     receiver_account_id: organizationId,
     amount: amount,
     description: comment || 'Пожертвование без комментария',
     timestamp: new Date().toISOString(),
     transaction_type: 'donation',
-  }
+  };
 
   try {
+    console.time('POST /api/accounts/transactions');
     const response = await fetch(`/api/accounts/${organizationId}/transactions`, {
       method: 'POST',
       headers: {
@@ -101,140 +131,217 @@ const submitDonation = async (donationData) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(newTransaction),
-    })
+    });
+    console.timeEnd('POST /api/accounts/transactions');
 
     if (!response.ok) {
-      return
+      console.error('Ошибка при отправке пожертвования:', response.statusText);
+      return;
     }
 
-    const createdTransaction = await response.json()
-    newTransaction.id = createdTransaction.id
-
+    console.time('Добавление транзакции в состояние');
     if (newTransaction.receiver_account_id === organization.value.account_id) {
-      organization.value.incomingTransactions.push(newTransaction)
+      organization.value.incomingTransactions.push(newTransaction);
+      console.log('Добавлена входящая транзакция:', newTransaction);
     }
     if (newTransaction.sender_account_id === organization.value.account_id) {
-      organization.value.outgoingTransactions.push(newTransaction)
+      organization.value.outgoingTransactions.push(newTransaction);
+      console.log('Добавлена исходящая транзакция:', newTransaction);
     }
+    console.timeEnd('Добавление транзакции в состояние');
+  } catch (error) {
+    console.error('Ошибка при отправке пожертвования:', error);
   } finally {
-    closeModal()
+    closeModal();
+    console.timeEnd('submitDonation');
   }
-}
+};
 
-const formatCurrency = (value) => {
-  return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB' }).format(value)
-}
+const formatCurrency = (value: number): string => {
+  console.log('Форматирование валюты для значения:', value);
+  console.time('formatCurrency');
+  const formatted = new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB' }).format(value);
+  console.timeEnd('formatCurrency');
+  return formatted;
+};
 
-const formatDate = (dateStr) => {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
-  if (isNaN(date)) return dateStr
-  return date.toLocaleDateString('ru-RU', {
+const formatDate = (dateStr: string): string => {
+  console.log('Форматирование даты для строки:', dateStr);
+  console.time('formatDate');
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  const formatted = date.toLocaleDateString('ru-RU', {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
-  })
-}
+  });
+  console.timeEnd('formatDate');
+  return formatted;
+};
 
-const goBack = () => {
-  router.back()
-}
+const goBack = (): void => {
+  console.log('Возврат на предыдущую страницу');
+  router.back();
+};
 
-const mergedTransactions = computed(() => {
-  const organizationId = parseInt(route.params.id, 10)
+const mergedTransactions = computed<Transaction[]>(() => {
+  console.log('Вычисление mergedTransactions');
+  console.time('mergedTransactions Computation');
+  
+  const organizationId = parseInt(route.params.id as string, 10);
 
-  const uniqueTransactions = Array.from(new Set([
-    ...organization.value.incomingTransactions,
-    ...organization.value.outgoingTransactions,
-  ].map(tx => JSON.stringify(tx))))
-    .map(tx => JSON.parse(tx))
+  const transactionSet = new Set<string>();
+  const uniqueTransactions: (Transaction & { timestampMillis: number })[] = [];
 
-  return uniqueTransactions.filter(tx =>
-    tx.receiver_account_id === organizationId
-  ).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-})
+  const createUniqueKey = (tx: Transaction): string => {
+    return `${tx.sender_account_id}-${tx.receiver_account_id}-${tx.amount}-${tx.timestamp}-${tx.description}-${tx.transaction_type}`;
+  };
 
-const fetchOrganizationData = async (id) => {
-  isLoading.value = true
-  error.value = null
+  const processTransactions = (transactions: Transaction[]) => {
+    transactions.forEach((tx) => {
+      const uniqueKey = createUniqueKey(tx);
+      if (!transactionSet.has(uniqueKey)) {
+        transactionSet.add(uniqueKey);
+        uniqueTransactions.push({
+          ...tx,
+          timestampMillis: new Date(tx.timestamp).getTime(),
+        });
+      }
+    });
+  };
+
+  console.time('Processing Incoming Transactions');
+  processTransactions(organization.value.incomingTransactions);
+  console.timeEnd('Processing Incoming Transactions');
+
+  console.time('Processing Outgoing Transactions');
+  processTransactions(organization.value.outgoingTransactions);
+  console.timeEnd('Processing Outgoing Transactions');
+
+  const filteredTransactions = uniqueTransactions.filter(
+    (tx) => tx.receiver_account_id === organizationId || tx.sender_account_id === organizationId
+  );
+
+  filteredTransactions.sort((a, b) => b.timestampMillis - a.timestampMillis);
+
+  console.timeEnd('mergedTransactions Computation');
+  return filteredTransactions;
+});
+
+watch(mergedTransactions, (newVal) => {
+  console.log('Merged Transactions изменились:', JSON.stringify(newVal, null, 2));
+});
+
+const fetchOrganizationData = async (id: number): Promise<void> => {
+  console.log(`Начало загрузки данных для организации ID: ${id}`);
+  console.time('fetchOrganizationData');
+
+  isLoading.value = true;
+  error.value = null;
 
   try {
-    const organizationsResponse = await fetch('/api/charity_organizations', {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-      },
-    })
+    console.time('Параллельные запросы к API');
+    const [organizationResponse, transactionsResponse] = await Promise.all([
+      fetch(`/api/charity_organizations/${id}`, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+        },
+      }),
+      fetch(`/api/accounts/${id}/transactions`, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+        },
+      }),
+    ]);
+    console.timeEnd('Параллельные запросы к API');
 
-    if (!organizationsResponse.ok) {
-      throw new Error('Ошибка при получении списка организаций')
+    if (!organizationResponse.ok) {
+      throw new Error('Ошибка при получении данных организации');
+    }
+    if (!transactionsResponse.ok) {
+      throw new Error('Ошибка при получении транзакций');
     }
 
-    const organizationsData = await organizationsResponse.json()
-    const orgData = organizationsData.find(org => org.id === id)
+    console.time('Парсинг данных организации');
+    const orgData = (await organizationResponse.json()) as Organization;
+    console.timeEnd('Парсинг данных организации');
 
-    if (!orgData) {
-      throw new Error('Организация с таким ID не найдена.')
-    }
-
+    console.log('Найдена организация:', orgData);
     organization.value = {
-      id: orgData.id,
-      name: orgData.name,
-      description: orgData.description,
-      website: orgData.website,
-      email: orgData.email,
-      phone_number: orgData.phone_number,
-      address: orgData.address,
-      account_id: orgData.account_id,
+      ...orgData,
       incomingTransactions: [],
       outgoingTransactions: [],
-    }
+    };
 
-    const transactionsResponse = await fetch(`/api/accounts/${organization.value.account_id}/transactions`, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-      },
-    })
-
-    if (!transactionsResponse.ok) {
-      throw new Error('Ошибка при получении транзакций')
-    }
-
-    let transactionsData = await transactionsResponse.json()
+    console.time('Парсинг транзакций');
+    let transactionsData = (await transactionsResponse.json()) as Transaction[];
+    console.timeEnd('Парсинг транзакций');
 
     transactionsData = transactionsData.filter(
-      tx => tx.receiver_account_id === organization.value.account_id || tx.sender_account_id === organization.value.account_id
-    )
+      (tx) =>
+        tx.receiver_account_id === organization.value.account_id ||
+        tx.sender_account_id === organization.value.account_id
+    );
 
     organization.value.incomingTransactions = transactionsData.filter(
-      tx => tx.receiver_account_id === organization.value.account_id
-    )
+      (tx) => tx.receiver_account_id === organization.value.account_id
+    );
     organization.value.outgoingTransactions = transactionsData.filter(
-      tx => tx.sender_account_id === organization.value.account_id
-    )
+      (tx) => tx.sender_account_id === organization.value.account_id
+    );
+
+    // Логирование транзакций
+    console.log(
+      'Incoming Transactions:',
+      JSON.stringify(organization.value.incomingTransactions, null, 2)
+    );
+    console.log(
+      'Outgoing Transactions:',
+      JSON.stringify(organization.value.outgoingTransactions, null, 2)
+    );
   } catch (err) {
-    error.value = err.message
+    console.error('Ошибка при загрузке данных организации:', err);
+    error.value = (err as Error).message;
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
+    console.timeEnd('fetchOrganizationData');
   }
-}
+};
+
+
 
 onMounted(() => {
-  const id = parseInt(route.params.id, 10)
-  fetchOrganizationData(id)
-})
+  const id = parseInt(route.params.id as string, 10);
+  console.log('Компонент смонтирован с ID:', id);
+  fetchOrganizationData(id).then(() => {
+    if (organization.value.incomingTransactions.length > 0) {
+      console.log(
+        'Пример входящей транзакции:',
+        JSON.stringify(organization.value.incomingTransactions[0], null, 2)
+      );
+    } else {
+      console.log('Нет входящих транзакций для примера');
+    }
+  });
+});
+
+console.log('Organization ID:', route.params.id);
 
 watch(
   () => route.params.id,
   (newId, oldId) => {
+    console.log(`Изменение ID организации: старое=${oldId}, новое=${newId}`);
     if (newId !== oldId) {
-      fetchOrganizationData(parseInt(newId, 10))
+      const parsedId = parseInt(newId as string, 10);
+      console.log(`Перезагрузка данных для новой организации ID: ${parsedId}`);
+      fetchOrganizationData(parsedId);
     }
   }
-)
+);
 </script>
-
 
 <style scoped>
 .text-darkBlue {
