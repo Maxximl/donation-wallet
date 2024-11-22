@@ -18,7 +18,6 @@
   </div>
 </template>
 
-
 <script setup>
 import { computed } from 'vue'
 
@@ -37,7 +36,6 @@ const props = defineProps({
   },
 })
 
-
 const formatAmountWithSuffix = (amount) => {
   const absAmount = Math.abs(amount);
   if (absAmount >= 1_000_000_000_000_000_000_000_000_000_000) return (amount / 1_000_000_000_000_000_000_000_000_000_000).toFixed(1) + 'Септ';
@@ -50,9 +48,8 @@ const formatAmountWithSuffix = (amount) => {
   if (absAmount >= 1_000_000_000) return (amount / 1_000_000_000).toFixed(1) + 'Млрд';
   if (absAmount >= 1_000_000) return (amount / 1_000_000).toFixed(1) + 'Млн';
   if (absAmount >= 1_000) return (amount / 1_000).toFixed(1) + 'Тыс';
-  return amount.toString();
+  return `${amount} Руб`;
 }
-
 
 const truncatedDescription = computed(() => {
   return props.transaction.description.length > 30
@@ -60,7 +57,6 @@ const truncatedDescription = computed(() => {
     : props.transaction.description
 })
 </script>
-
 
 <style scoped>
 .transaction-card {

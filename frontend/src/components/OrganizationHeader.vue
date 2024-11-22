@@ -1,9 +1,9 @@
 <template>
-    <div class="mb-6">
+    <div>
       <h1 class="text-4xl font-semibold text-darkBlue mb-4 text-center">
         {{ organization.name }}
       </h1>
-      <p class="text-gray-700 mb-6 text-center">
+      <p class="text-gray-700 text-center">
         {{ organization.description }}
       </p>
     </div>

@@ -4,6 +4,7 @@
       v-if="isLoading"
       class="text-center text-gray-500"
     >
+    <!-- ????? -->
       Загрузка транзакций<span class="dots">...</span>
     </div>
 
@@ -20,38 +21,31 @@
         :formatCurrency="formatCurrency"
       />
     </div>
-
-    <!-- <div v-else class="text-center text-gray-500">
-      Нет транзакций для отображения.
-    </div> -->
+    
+<!-- ????? -->
+    <div v-else class="text-center text-gray-500">
+      Загрузка транзакций<span class="dots">...</span>
+    </div>
   </div>
 </template>
 
-<script setup>
-import { ref } from 'vue'
+<script setup lang="ts">
+import { defineProps } from 'vue'
 import TransactionCard from './TransactionCard.vue'
 
-defineProps({
-  transactions: {
-    type: Array,
-    required: true,
-  },
-  formatDate: {
-    type: Function,
-    required: true,
-  },
-  formatCurrency: {
-    type: Function,
-    required: true,
-  },
-})
+interface Transaction {
+  timestamp: number
+  amount: number
+  sender_account_id: string
+  receiver_account_id: string
+}
 
-const isLoading = ref(true);
-
-// Имитируем загрузку данных
-setTimeout(() => {
-  isLoading.value = false; // Замените это на реальную логику окончания загрузки
-}, 2000);
+const props = defineProps<{
+  transactions: Transaction[]
+  formatDate: (date: number) => string
+  formatCurrency: (amount: number) => string
+  isLoading?: boolean
+}>()
 </script>
 
 <style scoped>

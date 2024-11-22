@@ -9,6 +9,7 @@
             :key="amount"
             @click="selectAmount(amount)"
             :class="['predefined-amount-button', selectedAmount === amount ? 'bg-blue-700' : '']"
+            :disabled="isSubmitting"
           >
             {{ formatCurrency(amount) }}
           </button>
@@ -22,7 +23,8 @@
             v-model.number="customAmount"
             min="1"
             placeholder="Введите сумму"
-            class="custom-amount-input "
+            class="custom-amount-input"
+            :disabled="isSubmitting"
           >
         </div>
 
@@ -33,6 +35,7 @@
             v-model="comment"
             placeholder="Введите комментарий"
             class="custom-comment-input"
+            :disabled="isSubmitting"
           ></textarea>
         </div>
       </div>
@@ -42,56 +45,59 @@
       </div>
 
       <div class="action-buttons">
-        <button @click="$emit('close-modal')" class="cancel-button">
+        <button @click="$emit('close-modal')" class="cancel-button" :disabled="isSubmitting">
           Отмена
         </button>
-        <button @click="handleSubmitDonation" class="submit-button">
-          Пожертвовать
+        <button @click="handleSubmitDonation" class="submit-button" :disabled="isSubmitting">
+          {{ isSubmitting ? 'Отправка...' : 'Пожертвовать' }}
         </button>
       </div>
     </div>
   </div>
 </template>
 
-<script setup>
-import { ref, watch, nextTick } from 'vue'
+<script setup lang="ts">
+import { ref, watch, nextTick } from 'vue';
 
-defineProps({
+const props = defineProps({
   isModalOpen: {
     type: Boolean,
     required: true,
   },
   predefinedAmounts: {
-    type: Array,
+    type: Array as () => number[],
     default: () => [],
   },
   formatCurrency: {
     type: Function,
     required: true,
   },
-})
+  isSubmitting: { 
+    type: Boolean,
+    required: true,
+  },
+});
 
-const emit = defineEmits(['close-modal', 'submit-donation'])
+const emit = defineEmits(['close-modal', 'submit-donation']);
 
-const selectedAmount = ref(null)
-const customAmount = ref(null)
-const comment = ref('')
-const errorMessage = ref('')
+const selectedAmount = ref<number | null>(null);
+const customAmount = ref<number | null>(null);
+const comment = ref('');
+const errorMessage = ref('');
 
-// Следим за изменениями selectedAmount и обновляем customAmount
 watch(selectedAmount, (newAmount) => {
-  customAmount.value = newAmount
-})
+  customAmount.value = newAmount;
+});
 
-const selectAmount = async (amount) => {
-  selectedAmount.value = amount
-  customAmount.value = amount
-  errorMessage.value = ''
+const selectAmount = async (amount: number) => {
+  if (props.isSubmitting) return; 
+  selectedAmount.value = amount;
+  customAmount.value = amount;
+  errorMessage.value = '';
 
-  // Дождемся обновления и затем вызовем alert
-  await nextTick()
-  alert(`Вы выбрали: ${formatCurrency(amount)}`)
-}
+  await nextTick();
+  // alert(`Вы выбрали: ${props.formatCurrency(amount)}`);
+};
 
 const handleSubmitDonation = () => {
   let amount = selectedAmount.value || customAmount.value;
@@ -103,9 +109,7 @@ const handleSubmitDonation = () => {
 
   emit('submit-donation', { amount: amount, comment: comment.value });
 };
-
 </script>
-
 
 <style scoped>
 .modal-overlay {
@@ -146,5 +150,10 @@ const handleSubmitDonation = () => {
 
 .submit-button {
   @apply bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded;
+}
+
+button:disabled,
+button[disabled] {
+  @apply opacity-50 cursor-not-allowed;
 }
 </style>

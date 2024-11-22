@@ -68,7 +68,7 @@ const handleLogin = () => {
 };
 
 const handleReset = () => {
-  console.log('Reset Password for:', email.value);
+  // console.log('Reset Password for:', email.value);
 };
 
 const toggleForm = () => {
