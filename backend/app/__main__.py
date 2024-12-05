@@ -51,8 +51,8 @@ def get_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    engine = create_engine(get_settings().database_uri_sync, echo=True, future=True)
-    Base.metadata.create_all(engine)
+    # engine = create_engine(get_settings().database_uri_sync, echo=True, future=True)
+    # Base.metadata.create_all(engine)
 
     return application
 

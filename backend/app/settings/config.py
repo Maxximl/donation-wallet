@@ -1,5 +1,4 @@
 from os import environ, makedirs
-from os.path import abspath, dirname, join
 
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
@@ -55,7 +54,7 @@ class DefaultSettings(BaseSettings):
         """
         Get uri for connection with database.
         """
-        return "postgresql+asyncpg://{user}:{password}@{host}:{port}/{database}".format(
+        return "postgresql://{user}:{password}@{host}:{port}/{database}".format(
             **self.database_settings,
         )
 
@@ -69,7 +68,7 @@ class DefaultSettings(BaseSettings):
         )
 
     class Config:
-        env_file = ".env"
+        env_file = "./../.env"  # or C:\kittyPy\donation-wallet\.env
         env_file_encoding = "utf-8"
 
 
