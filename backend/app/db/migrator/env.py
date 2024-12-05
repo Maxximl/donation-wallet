@@ -14,7 +14,7 @@ from app.db import Base
 
 config = context.config
 settings = get_settings()
-database_url = settings.database_uri
+database_url = settings.database_uri_sync
 config.set_main_option('sqlalchemy.url', database_url)
 target_metadata = Base.metadata
 

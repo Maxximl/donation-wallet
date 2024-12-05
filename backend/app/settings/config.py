@@ -50,11 +50,11 @@ class DefaultSettings(BaseSettings):
         }
 
     @property
-    def database_uri(self) -> str:
+    def database_uri_async(self) -> str:
         """
         Get uri for connection with database.
         """
-        return "postgresql://{user}:{password}@{host}:{port}/{database}".format(
+        return "postgresql+asyncpg://{user}:{password}@{host}:{port}/{database}".format(
             **self.database_settings,
         )
 
